@@ -20,15 +20,15 @@ int main(int argc, char* argv[])
 
     string line;
 
-    unsigned int memory[1000];
+    unsigned int memory[1000]; // Memory array
     unsigned int r[32] = {0};
     unsigned int counter = 0;
-    unsigned int pc = 0;
+    unsigned int pc = 0;       // Program Counter
     unsigned int instruction;
     
 
 
-
+    //Read each line on the file
     while (getline(file, line))
     {  
         stringstream ss; 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     }
 
 
-    while (iNum <= counter)
+    while (pc <= counter)
     {
         instruction =  memory[pc];
         unsigned int opcode = instruction >> 26;
@@ -115,12 +115,30 @@ int main(int argc, char* argv[])
             pc++;
 
         }
-        else if(opcode == 0b100011 || opcode == 0b101011 || opcode == 0b100100 || opcode == 0b100101|| opcode == 0b101001 || opcode == 0b101000)
+        else if(opcode == 0b000011 || opcode == 0b000010) //j-type
+        {
+            unsigned int target = (instruction & 0x03FFFFFF);
+
+            switch(opcode)
+            {
+                case 0b000010: //j
+                    pc = (pc  & 0xF0000000)| target << 2;
+                    break;
+                case 0b000011: //jal;
+                    pc = target << 2;
+                    break;
+                default:
+            }
+            pc++;
+
+        }
+        else //i-type
         {
             unsigned int rs = (instruction & 0x03FFFFFF) >> 21;
             unsigned int rt = (instruction & 0x001FFFFF) >> 16;
+            unsigned int im = (instruction & 0x0000FFFF); 
             unsigned int offset =  (instruction & 0x0000FFFF);
-
+    
             switch(opcode)
             {
                 case 0x04:// beq
@@ -153,35 +171,6 @@ int main(int argc, char* argv[])
                 case 0x28: //sb
                     *(unsigned char*)((char*)&memory[0] + offset + r[rs]) = r[rt];
                     break;
-                default:
-            }
-            pc++;
-        }
-        else if(opcode == 0b000011 || opcode == 0b000010) //j-type
-        {
-            unsigned int target = (instruction & 0x03FFFFFF);
-
-            switch(opcode)
-            {
-                case 0b000010: //j
-                    pc = (pc  & 0xF0000000)| target << 2;
-                    break;
-                case 0b000011: //jal;
-                    pc = target << 2;
-                    break;
-                default:
-            }
-            pc++;
-
-        }
-        else //i-type
-        {
-            unsigned int rs = (instruction & 0x03FFFFFF) >> 21;
-            unsigned int rt = (instruction & 0x001FFFFF) >> 16;
-            unsigned int im = (instruction & 0x0000FFFF); 
-    
-            switch(opcode)
-            {
                 case 0x08: //add
                     r[rt] = unsigned((int)r[rs] + (int)im); 
                 case 0x09: //addiu
